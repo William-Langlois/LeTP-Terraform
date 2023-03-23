@@ -1,1 +1,1 @@
-environment_suffix = "-prd"
+environment_suffix = "-prod"
