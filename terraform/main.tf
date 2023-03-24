@@ -4,9 +4,6 @@ terraform {
       source = "hashicorp/azurerm"
       version = "3.48.0"
     }
-    rabbitmq = {
-      source  = "cyrilgdn/rabbitmq"
-    }
   }
 
   backend "azurerm" {
@@ -18,29 +15,6 @@ provider "azurerm" {
   features {}
 }
 
-provider "rabbitmq" {
-  endpoint = "localhost:15672"
-  username = "wlangloisadmin"
-  password = "p@ssw0rdadmin"
-}
-
-resource "azurerm_service_plan" "wlanglois-app-plan" {
-  name                = "plan-${var.project_name}"
-  resource_group_name = data.azurerm_resource_group.rg-wlanglois.name
-  location            = data.azurerm_resource_group.rg-wlanglois.location
-  os_type             = "Linux"
-  sku_name            = "P1v2"
-}
-
-resource "azurerm_linux_web_app" "wlanglois-webapp" {
-  count               = 1
-  name                = "web-${var.project_name}"
-  resource_group_name = data.azurerm_resource_group.rg-wlanglois.name
-  location            = data.azurerm_resource_group.rg-wlanglois.location
-  service_plan_id     = azurerm_service_plan.wlanglois-app-plan.id
-  zip_deploy_file = "./zipDeployments/nodeAPI.zip"
-  site_config {}
-}
 
 resource "azurerm_postgresql_server" "wlanglois-pg" {
   name                = "wlanglois-postgresql-server-1"
@@ -54,9 +28,9 @@ resource "azurerm_postgresql_server" "wlanglois-pg" {
   geo_redundant_backup_enabled = false
   auto_grow_enabled            = true
 
-  administrator_login          = "wlangloisadmin"
-  administrator_login_password = "p@ssw0rdadmin"
-  version                      = "9.5"
+  administrator_login          = data.azurerm_key_vault_secret.DB-LOGIN.value
+  administrator_login_password = data.azurerm_key_vault_secret.DB-PASS.value
+  version                      = "11"
   ssl_enforcement_enabled      = true
 }
 
@@ -67,3 +41,67 @@ resource "azurerm_postgresql_database" "wlanglois-pgdb" {
   charset             = "UTF8"
   collation           = "English_United States.1252"
 }
+
+resource "azurerm_postgresql_firewall_rule" "wlanglois-fr" {
+  name = "wlangloisfr"
+  resource_group_name = data.azurerm_resource_group.rg-wlanglois.name
+  server_name = azurerm_postgresql_server.wlanglois-pg.name
+  start_ip_address = "0.0.0.0"
+  end_ip_address = "0.0.0.0"
+}
+
+resource "azurerm_service_plan" "wlanglois-app-plan" {
+  name                = "plan-${var.project_name}"
+  resource_group_name = data.azurerm_resource_group.rg-wlanglois.name
+  location            = data.azurerm_resource_group.rg-wlanglois.location
+  os_type             = "Linux"
+  sku_name            = "P1v2"
+}
+
+resource "azurerm_linux_web_app" "wlanglois-webapp" {
+  name                = "web-${var.project_name}"
+  resource_group_name = data.azurerm_resource_group.rg-wlanglois.name
+  location            = data.azurerm_resource_group.rg-wlanglois.location
+  service_plan_id     = azurerm_service_plan.wlanglois-app-plan.id
+
+  site_config {
+    always_on = true
+    application_stack{
+      node_version = "16-lts"
+    }
+  }
+
+  app_settings = {
+    PORT = 3000
+    DB_LOGIN = data.azurerm_key_vault_secret.DB-LOGIN.value 
+    DB_PASS = data.azurerm_key_vault_secret.DB-PASS.value
+  }
+}
+
+resource "azurerm_container_group" "wlanglois-cg" {
+  name="wlanglois-cg"
+  resource_group_name = data.azurerm_resource_group.rg-wlanglois.name
+  location = data.azurerm_resource_group.rg-wlanglois.location
+  ip_address_type = "Public"
+  dns_name_label = "wlanglois-cg-dns"
+  os_type="Linux"
+  exposed_port = []
+
+  container{
+    name = "pgadmin"
+    image = "dpage/pgadmin4:latest"
+    cpu = "0.5"
+    memory = "1.5"
+
+    ports{
+      port = 80
+      protocol = "TCP"
+    }
+
+    environment_variables = {
+      "PGADMIN_DEFAULT_EMAIL" = data.azurerm_key_vault_secret.PGADMIN-DEFAULT-EMAIL.value
+      "PGADMIN_DEFAULT_PASSWORD" = data.azurerm_key_vault_secret.PGADMIN-DEFAULT-PASSWORD.value
+    }
+  }  
+}
+
