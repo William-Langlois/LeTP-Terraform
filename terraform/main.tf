@@ -73,8 +73,11 @@ resource "azurerm_linux_web_app" "wlanglois-webapp" {
 
   app_settings = {
     PORT = 3000
-    DB_LOGIN = data.azurerm_key_vault_secret.DB-LOGIN.value 
+    DB_USER = data.azurerm_key_vault_secret.DB-LOGIN.value 
     DB_PASS = data.azurerm_key_vault_secret.DB-PASS.value
+    DB_HOST = azurerm_postgresql_server.wlanglois-pg.fqdn
+    DB_NAME = azurerm_postgresql_database.wlanglois-pgdb.name
+    DB_PORT  = 5432
   }
 }
 
@@ -101,7 +104,7 @@ resource "azurerm_container_group" "wlanglois-cg" {
     environment_variables = {
       "PGADMIN_DEFAULT_EMAIL" = data.azurerm_key_vault_secret.PGADMIN-DEFAULT-EMAIL.value
       "PGADMIN_DEFAULT_PASSWORD" = data.azurerm_key_vault_secret.PGADMIN-DEFAULT-PASSWORD.value
-      "PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION"=false
+      "PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION"="False" //Tentative pour fix une erreur de token CSRF sur le pgadmin
     }
   }  
 }
