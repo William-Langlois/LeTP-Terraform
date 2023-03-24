@@ -31,7 +31,7 @@ resource "azurerm_postgresql_server" "wlanglois-pg" {
   administrator_login          = data.azurerm_key_vault_secret.DB-LOGIN.value
   administrator_login_password = data.azurerm_key_vault_secret.DB-PASS.value
   version                      = "11"
-  ssl_enforcement_enabled      = true
+  ssl_enforcement_enabled      = false
 }
 
 resource "azurerm_postgresql_database" "wlanglois-pgdb" {
