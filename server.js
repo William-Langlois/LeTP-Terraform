@@ -20,9 +20,23 @@ app.listen(process.env.PORT, () => {
 const phones = ["Iphone","Alcatel"]
 //TODO : turn into postgres
 app.get("/get-phones", async(req, res, next) => {
-    queries.getPhones(req,res);
+    try{
+        var result =  await queries.getPhones(req,res);
+        res.status(200,result)
+    }
+    catch(ex)
+    {
+        res.status(500,ex);
+    }
 });
 
 app.post("/add-phone", async (req, res, next) => {
-    queries.addPhone(req,res);
+    try{
+        var result =  await queries.addPhone(req,res);
+        res.status(200,result)
+    }
+    catch(ex)
+    {
+        res.status(500,ex);
+    }
 });
