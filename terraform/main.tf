@@ -101,6 +101,7 @@ resource "azurerm_container_group" "wlanglois-cg" {
     environment_variables = {
       "PGADMIN_DEFAULT_EMAIL" = data.azurerm_key_vault_secret.PGADMIN-DEFAULT-EMAIL.value
       "PGADMIN_DEFAULT_PASSWORD" = data.azurerm_key_vault_secret.PGADMIN-DEFAULT-PASSWORD.value
+      "PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION"=false
     }
   }  
 }
