@@ -16,24 +16,10 @@ app.listen(process.env.PORT, () => {
  console.log("Server running on port",process.env.PORT);
 });
 
-app.get("/get-phones", async(req, res, next) => {
-    try{
-        var result =  await queries.getPhones(req,res);
-        res.status(200).json(result);
-    }
-    catch(ex)
-    {
-        res.status(500).json(ex);
-    }
+app.get("/get-phones", (req, res, next) => {
+    queries.getPhones(req,res);
 });
 
-app.post("/add-phone", async (req, res, next) => {
-    try{
-        var result =  await queries.addPhone(req,res);
-        res.status(200).json(result);
-    }
-    catch(ex)
-    {
-        res.status(500).json(ex);
-    }
+app.post("/add-phone", (req, res, next) => {
+    queries.addPhone(req,res);
 });
