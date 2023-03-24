@@ -10,6 +10,7 @@ const pool = new Pool({
 const getPhones = (req,res)=>{
     pool.query('SELECT * FROM phones ORDER BY id ASC', (error, results) => {
         if (error) {
+            console.log(error);
             throw error
         }
         res.status(200).json(results.rows)
@@ -21,6 +22,7 @@ const addPhone = (req,res)=>{
 
     pool.query('INSERT INTO phones (name) VALUES ($1) RETURNING *', [name], (error, results) => {
         if (error) {
+            console.log(error);
             throw error
         }
         res.status(201).send(`Phone added with ID: ${results.rows[0].id}`)
