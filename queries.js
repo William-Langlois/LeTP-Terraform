@@ -18,7 +18,7 @@ const getPhones = (req,res)=>{
 }
 
 const addPhone = (req,res)=>{
-    const { name } = req.body
+    const name = req.body
 
     pool.query('INSERT INTO phones (name) VALUES ($1) RETURNING *', [name], (error, results) => {
         if (error) {
